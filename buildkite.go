@@ -6,13 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
-	buildkiteAgent "github.com/buildkite/agent/agent"
-	buildkite "github.com/buildkite/agent/api"
-	"github.com/buildkite/agent/retry"
-	"gopkg.in/yaml.v2"
+	buildkite "github.com/buildkite/agent/v3/api"
+	buildkiteLogger "github.com/buildkite/agent/v3/logger"
+	"github.com/buildkite/agent/v3/retry"
 )
 
 type Buildkite struct {
@@ -28,11 +28,13 @@ type Buildkite struct {
 }
 
 func (c *Context) Buildkite() *Buildkite {
-	clientBuilder := buildkiteAgent.APIClient{
-		Endpoint: c.BuildkiteAgentEndpointURL,
-		Token:    c.BuildkiteAgentAccessToken,
-	}
-	agentClient := clientBuilder.Create()
+	agentClient := buildkite.NewClient(
+		buildkiteLogger.NewConsoleLogger(buildkiteLogger.NewTextPrinter(os.Stderr), os.Exit),
+		buildkite.Config{
+			Endpoint: c.BuildkiteAgentEndpointURL,
+			Token:    c.BuildkiteAgentAccessToken,
+		},
+	)
 
 	apiURL, _ := url.Parse(fmt.Sprintf("https://api.buildkite.com/v2/organizations/%s/", c.BuildkiteOrganizationSlug))
 
@@ -53,7 +55,7 @@ func (b *Buildkite) WriteJobMetadata(metadata map[string]string) error {
 			Value: v,
 		}
 		err := retry.Do(func(s *retry.Stats) error {
-			resp, err := client.MetaData.Set(b.jobId, metadatum)
+			resp, err := client.SetMetaData(b.jobId, metadatum)
 			if resp != nil && (resp.StatusCode == 401 || resp.StatusCode == 404) {
 				s.Break()
 			}
@@ -71,16 +73,16 @@ func (b *Buildkite) WriteJobMetadata(metadata map[string]string) error {
 func (b *Buildkite) InsertPipelineSteps(steps []interface{}) error {
 	client := b.agentClient
 
-	pipelineBytes, err := yaml.Marshal(map[string]interface{}{
+	pipelineMap := map[string]interface{}{
 		"steps": steps,
-	})
+	}
 
 	pipeline := &buildkite.Pipeline{
 		UUID:     buildkite.NewUUID(),
-		Data:     pipelineBytes,
-		FileName: "pipeline.yaml",
+		Pipeline: pipelineMap,
+		Replace:  false,
 	}
-	_, err = client.Pipelines.Upload(b.jobId, pipeline)
+	_, err := client.UploadPipeline(b.jobId, pipeline)
 	return err
 }
 
@@ -107,7 +109,7 @@ func (b *Buildkite) apiGET(pathParts []string) (map[string]interface{}, error) {
 		Header: http.Header{},
 		URL:    reqURL,
 	}
-	req.Header.Add("Authorization", "Bearer " + b.apiToken)
+	req.Header.Add("Authorization", "Bearer "+b.apiToken)
 
 	client := &http.Client{}
 
