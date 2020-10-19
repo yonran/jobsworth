@@ -229,10 +229,10 @@ func interpolateStep(step Step, context *Context, stepContext *StepContext) {
 		GlobalScope: scope,
 	}
 	hil.Walk(step, func(d *hil.WalkData) error {
-		result, _, err := hil.Eval(d.Root, evalConfig)
+		result, err := hil.Eval(d.Root, evalConfig)
 		if err == nil {
 			d.Replace = true
-			d.ReplaceValue = result.(string)
+			d.ReplaceValue = result.Value.(string)
 		}
 		return err
 	})

@@ -7,9 +7,10 @@ require (
 	github.com/ErikDubbelboer/gspt v0.0.0-20161124033300-1413420207d2 // indirect
 	github.com/buildkite/agent v2.1.18-0.20170413033704-7272c2472f22+incompatible
 	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135 // indirect
-	github.com/hashicorp/hil v0.0.0-20160210070525-3eb5226cd1c4
+	github.com/hashicorp/hil v0.0.0-20200423225030-a18a1cd20038
 	github.com/libgit2/git2go/v30 v30.0.13
-	github.com/mitchellh/reflectwalk v0.0.0-20170726202117-63d60e9d0dbc // indirect
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pborman/uuid v0.0.0-20170612153648-e790cca94e6c // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
